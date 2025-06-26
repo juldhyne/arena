@@ -19,6 +19,10 @@ export abstract class CharacterUpdate {
   static heal(sourceId: string, targetId: string, amount: number): HealUpdate {
     return new HealUpdate(sourceId, targetId, amount);
   }
+
+  static revive(sourceId: string, targetId: string): ReviveUpdate {
+    return new ReviveUpdate(sourceId, targetId);
+  }
 }
 
 export class DamageUpdate extends CharacterUpdate {
@@ -46,5 +50,15 @@ export class HealUpdate extends CharacterUpdate {
 
   applyToCharacter(c: Character): Character {
     return c.applyHeal(this.amount);
+  }
+}
+
+export class ReviveUpdate extends CharacterUpdate {
+  constructor(sourceId: string, targetId: string) {
+    super(sourceId, targetId);
+  }
+
+  applyToCharacter(c: Character): Character {
+    return c.applyRevive();
   }
 }

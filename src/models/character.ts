@@ -10,11 +10,17 @@ export class Character {
   }
 
   applyHeal(heal: number): Character {
+    if (!this.isAlive()) return this;
     return new Character(
       this.id,
-      this.hp === 0 ? 0 : Math.min(this.hp + heal, this.maxHp),
+      Math.min(this.hp + heal, this.maxHp),
       this.maxHp,
     );
+  }
+
+  applyRevive(): Character {
+    if (this.isAlive()) return this;
+    return new Character(this.id, 5, this.maxHp);
   }
 
   isAlive(): boolean {
