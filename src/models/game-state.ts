@@ -7,7 +7,7 @@ export class GameState {
   applyUpdate(update: CharacterUpdate): GameState {
     return new GameState(
       this.characters.map((c) =>
-        c.id === update.targetId ? c.applyDamage(update.damages) : c,
+        c.id === update.targetId ? update.applyToCharacter(c) : c,
       ),
     );
   }
