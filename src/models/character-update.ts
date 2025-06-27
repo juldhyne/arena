@@ -180,45 +180,43 @@ function moveInDirection(
   distance: number,
   board: { minX: number; maxX: number; minY: number; maxY: number },
 ): Position {
-  const clamp = (value: number, min: number, max: number) =>
-    Math.max(min, Math.min(max, value));
-
   let x = origin.x;
   let y = origin.y;
 
-  switch (direction) {
-    case Direction.NORTH:
-      y += distance;
-      break;
-    case Direction.SOUTH:
-      y -= distance;
-      break;
-    case Direction.EAST:
-      x += distance;
-      break;
-    case Direction.WEST:
-      x -= distance;
-      break;
-    case Direction.NORTH_EAST:
-      x += distance;
-      y += distance;
-      break;
-    case Direction.NORTH_WEST:
-      x -= distance;
-      y += distance;
-      break;
-    case Direction.SOUTH_EAST:
-      x += distance;
-      y -= distance;
-      break;
-    case Direction.SOUTH_WEST:
-      x -= distance;
-      y -= distance;
-      break;
+  const dx =
+    direction === Direction.EAST ||
+    direction === Direction.NORTH_EAST ||
+    direction === Direction.SOUTH_EAST
+      ? 1
+      : direction === Direction.WEST ||
+        direction === Direction.NORTH_WEST ||
+        direction === Direction.SOUTH_WEST
+      ? -1
+      : 0;
+
+  const dy =
+    direction === Direction.NORTH ||
+    direction === Direction.NORTH_EAST ||
+    direction === Direction.NORTH_WEST
+      ? 1
+      : direction === Direction.SOUTH ||
+        direction === Direction.SOUTH_EAST ||
+        direction === Direction.SOUTH_WEST
+      ? -1
+      : 0;
+
+  for (let i = 0; i < distance; i++) {
+    const nextX = x + dx;
+    const nextY = y + dy;
+
+    const withinX = nextX >= board.minX && nextX <= board.maxX;
+    const withinY = nextY >= board.minY && nextY <= board.maxY;
+
+    if (!withinX || !withinY) break;
+
+    x = nextX;
+    y = nextY;
   }
 
-  return {
-    x: clamp(x, board.minX, board.maxX),
-    y: clamp(y, board.minY, board.maxY),
-  };
+  return { x, y };
 }
