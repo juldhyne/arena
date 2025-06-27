@@ -1,4 +1,5 @@
 import { Character } from "./character";
+import { Direction } from "./direction";
 import { GameState } from "./game-state";
 import { Position } from "./position";
 
@@ -32,6 +33,15 @@ export abstract class CharacterUpdate {
     position: Position,
   ): PositionUpdate {
     return new TeleportationUpdate(sourceId, targetId, position);
+  }
+
+  static dash(
+    sourceId: string,
+    targetId: string,
+    direction: Direction,
+    distance: number,
+  ): PositionUpdate {
+    return new DashUpdate(sourceId, targetId, direction, distance);
   }
 }
 
@@ -74,36 +84,141 @@ export class ReviveUpdate extends CharacterUpdate {
 }
 
 export abstract class PositionUpdate extends CharacterUpdate {
-  constructor(
-    sourceId: string,
-    targetId: string,
-    public readonly position: Position,
-  ) {
+  constructor(sourceId: string, targetId: string) {
     super(sourceId, targetId);
   }
 
   applyToCharacter(c: Character, s: GameState): Character {
-    const isOccupied = s.characters.some(
-      (char) =>
-        char.id !== this.targetId &&
-        char.position.x == this.position.x &&
-        char.position.y == this.position.y,
-    );
+    const path = this.calculatePath(c, s);
 
-    if (isOccupied) {
-      const newPosition = this.handleConflict(c, s);
-      return c.applyPosition(newPosition);
-    }
-
-    return c.applyPosition(this.position);
+    const finalPos = this.resolveConflicts(c.position, path, s);
+    return c.applyPosition(finalPos);
   }
 
-  protected abstract handleConflict(c: Character, s: GameState): Position;
+  protected abstract calculatePath(c: Character, s: GameState): Position[];
+  protected abstract resolveConflicts(
+    start: Position,
+    path: Position[],
+    s: GameState,
+  ): Position;
 }
 
 export class TeleportationUpdate extends PositionUpdate {
-  // If trying to teleport on an occupied position, then does not move
-  protected handleConflict(c: Character, s: GameState): Position {
-    return c.position;
+  constructor(
+    sourceId: string,
+    targetId: string,
+    private readonly destination: Position,
+  ) {
+    super(sourceId, targetId);
   }
+
+  protected calculatePath(c: Character, s: GameState): Position[] {
+    return [this.destination];
+  }
+  protected resolveConflicts(
+    start: Position,
+    path: Position[],
+    s: GameState,
+  ): Position {
+    const occupied = s.characters.some(
+      (c) =>
+        c.position.x === this.destination.x &&
+        c.position.y === this.destination.y,
+    );
+    return occupied ? start : this.destination;
+  }
+}
+
+export class DashUpdate extends PositionUpdate {
+  constructor(
+    sourceId: string,
+    targetId: string,
+    private readonly direction: Direction,
+    private readonly distance: number,
+  ) {
+    super(sourceId, targetId);
+  }
+
+  protected calculatePath(c: Character, s: GameState): Position[] {
+    const path: Position[] = [];
+    let { x, y } = c.position;
+
+    for (let i = 1; i <= this.distance; i++) {
+      const next = moveInDirection({ x, y }, this.direction, i, s.board);
+      path.push(next);
+    }
+
+    return path;
+  }
+  protected resolveConflicts(
+    start: Position,
+    path: Position[],
+    s: GameState,
+  ): Position {
+    for (let i = path.length - 1; i >= 0; i--) {
+      const pos = path[i];
+      const isOccupied = s.characters.some(
+        (char) =>
+          char.id !== this.targetId &&
+          char.position.x === pos.x &&
+          char.position.y === pos.y,
+      );
+
+      if (!isOccupied) {
+        return pos;
+      }
+    }
+
+    // All positions in the path are occupied, stay in place
+    return start;
+  }
+}
+
+function moveInDirection(
+  origin: Position,
+  direction: Direction,
+  distance: number,
+  board: { minX: number; maxX: number; minY: number; maxY: number },
+): Position {
+  const clamp = (value: number, min: number, max: number) =>
+    Math.max(min, Math.min(max, value));
+
+  let x = origin.x;
+  let y = origin.y;
+
+  switch (direction) {
+    case Direction.NORTH:
+      y += distance;
+      break;
+    case Direction.SOUTH:
+      y -= distance;
+      break;
+    case Direction.EAST:
+      x += distance;
+      break;
+    case Direction.WEST:
+      x -= distance;
+      break;
+    case Direction.NORTH_EAST:
+      x += distance;
+      y += distance;
+      break;
+    case Direction.NORTH_WEST:
+      x -= distance;
+      y += distance;
+      break;
+    case Direction.SOUTH_EAST:
+      x += distance;
+      y -= distance;
+      break;
+    case Direction.SOUTH_WEST:
+      x -= distance;
+      y -= distance;
+      break;
+  }
+
+  return {
+    x: clamp(x, board.minX, board.maxX),
+    y: clamp(y, board.minY, board.maxY),
+  };
 }
