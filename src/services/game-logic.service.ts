@@ -1,4 +1,4 @@
-import { CharacterUpdate } from "../models/character-update";
+import { CharacterUpdate, PositionUpdate } from "../models/character-update";
 import { GameState } from "../models/game-state";
 
 export class GameLogicService {
