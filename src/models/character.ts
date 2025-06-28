@@ -26,7 +26,7 @@ export class Character {
     return this.copyWith({ position: position });
   }
 
-  copyWith(params: { hp?: number; position?: Position }): Character {
+  private copyWith(params: { hp?: number; position?: Position }): Character {
     return new Character(
       this.id,
       params.hp ?? this.hp,
