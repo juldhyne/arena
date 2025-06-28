@@ -28,6 +28,16 @@ export class Character {
     return this.copyWith({ position: position });
   }
 
+  applyAddEffect(effect: Effect): Character {
+    const effects = [...this.effects.filter((e) => e.id !== effect.id), effect];
+    return this.copyWith({ effects: effects });
+  }
+
+  applyRemoveEffect(effectId: string): Character {
+    const effects = [...this.effects.filter((e) => e.id !== effectId)];
+    return this.copyWith({ effects: effects });
+  }
+
   private copyWith(params: {
     hp?: number;
     position?: Position;

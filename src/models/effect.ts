@@ -3,6 +3,8 @@ import { CharacterUpdate, DamageUpdate } from "./character-update";
 import { GameState } from "./game-state";
 
 export abstract class Effect {
+  constructor(public readonly id: string) {}
+
   abstract modifyOutgoingUpdate(
     update: CharacterUpdate,
     source: Character,
@@ -24,6 +26,10 @@ export abstract class Effect {
 }
 
 export class BerserkerEffect extends Effect {
+  constructor() {
+    super("berserker");
+  }
+
   modifyOutgoingUpdate(
     update: CharacterUpdate,
     character: Character,
@@ -64,6 +70,10 @@ export class BerserkerEffect extends Effect {
 }
 
 export class FightBackEffect extends Effect {
+  constructor() {
+    super("fightback");
+  }
+
   modifyOutgoingUpdate(
     update: CharacterUpdate,
     character: Character,
@@ -86,7 +96,7 @@ export class FightBackEffect extends Effect {
   ): CharacterUpdate[] {
     if (
       update instanceof DamageUpdate &&
-      target.effects.some((e) => e instanceof FightBackEffect)
+      target.effects.some((e) => e.id === "fightback")
     ) {
       return [new DamageUpdate(target.id, source.id, update.amount)];
     }

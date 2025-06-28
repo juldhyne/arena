@@ -1,5 +1,6 @@
 import { Character } from "./character";
 import { Direction, moveInDirection } from "./direction";
+import { Effect } from "./effect";
 import { GameState } from "./game-state";
 import { Position } from "./position";
 
@@ -42,6 +43,22 @@ export abstract class CharacterUpdate {
     distance: number,
   ): PositionUpdate {
     return new DashUpdate(sourceId, targetId, direction, distance);
+  }
+
+  static addEffect(
+    sourceId: string,
+    targetId: string,
+    effect: Effect,
+  ): AddEffectUpdate {
+    return new AddEffectUpdate(sourceId, targetId, effect);
+  }
+
+  static removeEffect(
+    sourceId: string,
+    targetId: string,
+    effectId: string,
+  ): RemoveEffectUpdate {
+    return new RemoveEffectUpdate(sourceId, targetId, effectId);
   }
 }
 
@@ -171,5 +188,33 @@ export class DashUpdate extends PositionUpdate {
 
     // All positions in the path are occupied, stay in place
     return start;
+  }
+}
+
+export class AddEffectUpdate extends CharacterUpdate {
+  constructor(
+    sourceId: string,
+    targetId: string,
+    public readonly effect: Effect,
+  ) {
+    super(sourceId, targetId);
+  }
+
+  applyToCharacter(c: Character, s: GameState): Character {
+    return c.applyAddEffect(this.effect);
+  }
+}
+
+export class RemoveEffectUpdate extends CharacterUpdate {
+  constructor(
+    sourceId: string,
+    targetId: string,
+    public readonly effectId: string,
+  ) {
+    super(sourceId, targetId);
+  }
+
+  applyToCharacter(c: Character, s: GameState): Character {
+    return c.applyRemoveEffect(this.effectId);
   }
 }
