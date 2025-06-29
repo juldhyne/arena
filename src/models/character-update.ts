@@ -28,6 +28,10 @@ export abstract class CharacterUpdate {
     return new ReviveUpdate(sourceId, targetId);
   }
 
+  static speed(sourceId: string, targetId: string, speed: number): SpeedUpdate {
+    return new SpeedUpdate(sourceId, targetId, speed);
+  }
+
   static teleportation(
     sourceId: string,
     targetId: string,
@@ -97,6 +101,20 @@ export class ReviveUpdate extends CharacterUpdate {
 
   applyToCharacter(c: Character, s: GameState): Character {
     return c.applyRevive();
+  }
+}
+
+export class SpeedUpdate extends CharacterUpdate {
+  constructor(
+    sourceId: string,
+    targetId: string,
+    public readonly speed: number,
+  ) {
+    super(sourceId, targetId);
+  }
+
+  applyToCharacter(c: Character, s: GameState): Character {
+    return c.applySpeed(this.speed);
   }
 }
 

@@ -6,6 +6,7 @@ export class Character {
     public readonly id: string,
     public readonly hp: number,
     public readonly maxHp: number,
+    public readonly speed: number,
     public readonly position: Position,
     public readonly effects: CharacterEffect[] = [],
   ) {}
@@ -22,6 +23,10 @@ export class Character {
   applyRevive(): Character {
     if (this.isAlive()) return this;
     return this.copyWith({ hp: 5 });
+  }
+
+  applySpeed(speed: number): Character {
+    return this.copyWith({ speed: speed });
   }
 
   applyPosition(position: Position): Character {
@@ -47,6 +52,7 @@ export class Character {
 
   private copyWith(params: {
     hp?: number;
+    speed?: number;
     position?: Position;
     effects?: CharacterEffect[];
   }): Character {
@@ -54,6 +60,7 @@ export class Character {
       this.id,
       params.hp ?? this.hp,
       this.maxHp,
+      params.speed ?? this.speed,
       params.position ?? this.position,
       params.effects ?? this.effects,
     );
