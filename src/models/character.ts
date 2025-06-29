@@ -38,6 +38,11 @@ export class Character {
     return this.copyWith({ effects: effects });
   }
 
+  decrementEffects(): Character {
+    const effects = this.effects.map((e) => e.decrementTurnsLeft());
+    return this.copyWith({ effects: effects });
+  }
+
   private copyWith(params: {
     hp?: number;
     position?: Position;

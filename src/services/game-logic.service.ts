@@ -1,8 +1,17 @@
-import { CharacterUpdate, PositionUpdate } from "../models/character-update";
+import { CharacterUpdate } from "../models/character-update";
 import { GameState } from "../models/game-state";
 
 export class GameLogicService {
-  applyUpdates(initialState: GameState, updates: CharacterUpdate[]): GameState {
+  turnLogic(initialState: GameState, updates: CharacterUpdate[]): GameState {
+    const newState = this.applyUpdates(initialState, updates);
+    const incrementedTurnState = newState.incrementTurn();
+    return incrementedTurnState;
+  }
+
+  private applyUpdates(
+    initialState: GameState,
+    updates: CharacterUpdate[],
+  ): GameState {
     let state = initialState;
     const queue: CharacterUpdate[] = [...updates];
 

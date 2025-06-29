@@ -6,6 +6,7 @@ export class GameState {
   constructor(
     public readonly characters: Character[],
     public readonly board: Board,
+    public readonly turn: number,
   ) {}
 
   applyUpdate(update: CharacterUpdate): GameState {
@@ -14,6 +15,15 @@ export class GameState {
         c.id === update.targetId ? update.applyToCharacter(c, this) : c,
       ),
       this.board,
+      this.turn,
+    );
+  }
+
+  incrementTurn(): GameState {
+    return new GameState(
+      this.characters.map((c) => c.decrementEffects()),
+      this.board,
+      this.turn + 1,
     );
   }
 }

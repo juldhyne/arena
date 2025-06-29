@@ -3,7 +3,7 @@ import { CharacterUpdate, DamageUpdate } from "./character-update";
 import { GameState } from "./game-state";
 
 export abstract class Effect {
-  constructor(public readonly id: string) {}
+  constructor(public readonly id: string, public readonly turnsLeft: number) {}
 
   abstract modifyOutgoingUpdate(
     update: CharacterUpdate,
@@ -23,11 +23,13 @@ export abstract class Effect {
     target: Character,
     newState: GameState,
   ): CharacterUpdate[];
+
+  abstract decrementTurnsLeft(): Effect;
 }
 
 export class BerserkerEffect extends Effect {
-  constructor() {
-    super("berserker");
+  constructor(turnsLeft: number = 3) {
+    super("berserker", turnsLeft);
   }
 
   modifyOutgoingUpdate(
@@ -67,11 +69,15 @@ export class BerserkerEffect extends Effect {
   ): CharacterUpdate[] {
     return [];
   }
+
+  decrementTurnsLeft(): Effect {
+    return new BerserkerEffect(this.turnsLeft - 1);
+  }
 }
 
 export class FightBackEffect extends Effect {
-  constructor() {
-    super("fightback");
+  constructor(turnsLeft: number = 3) {
+    super("fightback", turnsLeft);
   }
 
   modifyOutgoingUpdate(
@@ -101,5 +107,9 @@ export class FightBackEffect extends Effect {
       return [new DamageUpdate(target.id, source.id, update.amount)];
     }
     return [];
+  }
+
+  decrementTurnsLeft(): Effect {
+    return new FightBackEffect(this.turnsLeft - 1);
   }
 }
