@@ -1,6 +1,6 @@
 import { Character } from "./character";
 import { Direction, moveInDirection } from "./direction";
-import { Effect } from "./effect";
+import { CharacterEffect, Effect } from "./effect";
 import { GameState } from "./game-state";
 import { Position } from "./position";
 
@@ -48,7 +48,7 @@ export abstract class CharacterUpdate {
   static addEffect(
     sourceId: string,
     targetId: string,
-    effect: Effect,
+    effect: CharacterEffect,
   ): AddEffectUpdate {
     return new AddEffectUpdate(sourceId, targetId, effect);
   }
@@ -108,8 +108,34 @@ export abstract class PositionUpdate extends CharacterUpdate {
   applyToCharacter(c: Character, s: GameState): Character {
     const path = this.calculatePath(c, s);
 
+    let character = c;
+    let currentPosition = c.position;
+
+    for (const position of path) {
+      const tile = s.affectedTiles.find(
+        (t) => t.position.x === position.x && t.position.y === position.y,
+      );
+
+      if (tile) {
+        for (const effect of tile.effects) {
+          const updates = effect.onCharacterPass(character, s);
+          for (const update of updates) {
+            character = update.applyToCharacter(character, s);
+            // Check if the character has died
+            if (!character.isAlive()) {
+              return character.applyPosition(position); // died here
+            }
+          }
+        }
+      }
+
+      currentPosition = position; // only advance position if not dead
+    }
+
     const finalPos = this.resolveConflicts(c.position, path, s);
-    return c.applyPosition(finalPos);
+    return character.isAlive()
+      ? character.applyPosition(finalPos)
+      : character.applyPosition(currentPosition);
   }
 
   protected abstract calculatePath(c: Character, s: GameState): Position[];
@@ -195,7 +221,7 @@ export class AddEffectUpdate extends CharacterUpdate {
   constructor(
     sourceId: string,
     targetId: string,
-    public readonly effect: Effect,
+    public readonly effect: CharacterEffect,
   ) {
     super(sourceId, targetId);
   }

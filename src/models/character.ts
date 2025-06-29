@@ -1,4 +1,4 @@
-import { Effect } from "./effect";
+import { CharacterEffect, Effect } from "./effect";
 import { Position } from "./position";
 
 export class Character {
@@ -7,7 +7,7 @@ export class Character {
     public readonly hp: number,
     public readonly maxHp: number,
     public readonly position: Position,
-    public readonly effects: Effect[] = [],
+    public readonly effects: CharacterEffect[] = [],
   ) {}
 
   applyDamage(damage: number): Character {
@@ -28,7 +28,7 @@ export class Character {
     return this.copyWith({ position: position });
   }
 
-  applyAddEffect(effect: Effect): Character {
+  applyAddEffect(effect: CharacterEffect): Character {
     const effects = [...this.effects.filter((e) => e.id !== effect.id), effect];
     return this.copyWith({ effects: effects });
   }
@@ -48,7 +48,7 @@ export class Character {
   private copyWith(params: {
     hp?: number;
     position?: Position;
-    effects?: Effect[];
+    effects?: CharacterEffect[];
   }): Character {
     return new Character(
       this.id,
