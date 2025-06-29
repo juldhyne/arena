@@ -72,7 +72,7 @@ export class DamageUpdate extends CharacterUpdate {
   }
 
   applyToCharacter(c: Character, s: GameState): Character {
-    return c.applyDamage(this.amount);
+    return c.applyDamage(Math.max(0, this.amount));
   }
 }
 
