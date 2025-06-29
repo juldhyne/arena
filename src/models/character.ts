@@ -39,7 +39,9 @@ export class Character {
   }
 
   decrementEffects(): Character {
-    const effects = this.effects.map((e) => e.decrementTurnsLeft());
+    const effects = this.effects
+      .map((e) => e.decrementTurnsLeft())
+      .filter((e) => e.turnsLeft > 0);
     return this.copyWith({ effects: effects });
   }
 

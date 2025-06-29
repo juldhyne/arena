@@ -3,9 +3,20 @@ import { GameState } from "../models/game-state";
 
 export class GameLogicService {
   turnLogic(initialState: GameState, updates: CharacterUpdate[]): GameState {
-    const newState = this.applyUpdates(initialState, updates);
-    const incrementedTurnState = newState.incrementTurn();
-    return incrementedTurnState;
+    let state = this.applyUpdates(initialState, updates);
+
+    for (let character of state.characters) {
+      for (let effect of character.effects) {
+        if (effect.onTurnEnd) {
+          const effectUpdates = effect.onTurnEnd(character, state);
+          state = this.applyUpdates(state, effectUpdates);
+        }
+      }
+    }
+
+    state = state.incrementTurn();
+
+    return state;
   }
 
   private applyUpdates(

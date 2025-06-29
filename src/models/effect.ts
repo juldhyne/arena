@@ -3,17 +3,21 @@ import { CharacterUpdate, DamageUpdate } from "./character-update";
 import { GameState } from "./game-state";
 
 export abstract class Effect {
-  constructor(public readonly id: string, public readonly turnsLeft: number) {}
+  constructor(
+    public readonly id: string,
+    public readonly sourceId: string,
+    public readonly turnsLeft: number,
+  ) {}
 
   abstract modifyOutgoingUpdate(
     update: CharacterUpdate,
-    source: Character,
+    character: Character,
     state: GameState,
   ): CharacterUpdate;
 
   abstract modifyIncomingUpdate(
     update: CharacterUpdate,
-    target: Character,
+    character: Character,
     state: GameState,
   ): CharacterUpdate;
 
@@ -25,11 +29,13 @@ export abstract class Effect {
   ): CharacterUpdate[];
 
   abstract decrementTurnsLeft(): Effect;
+
+  onTurnEnd?(character: Character, state: GameState): CharacterUpdate[];
 }
 
 export class BerserkerEffect extends Effect {
-  constructor(turnsLeft: number = 3) {
-    super("berserker", turnsLeft);
+  constructor(sourceId: string, turnsLeft: number = 3) {
+    super("berserker", sourceId, turnsLeft);
   }
 
   modifyOutgoingUpdate(
@@ -71,13 +77,13 @@ export class BerserkerEffect extends Effect {
   }
 
   decrementTurnsLeft(): Effect {
-    return new BerserkerEffect(this.turnsLeft - 1);
+    return new BerserkerEffect(this.sourceId, this.turnsLeft - 1);
   }
 }
 
 export class FightBackEffect extends Effect {
-  constructor(turnsLeft: number = 3) {
-    super("fightback", turnsLeft);
+  constructor(sourceId: string, turnsLeft: number = 3) {
+    super("fightback", sourceId, turnsLeft);
   }
 
   modifyOutgoingUpdate(
@@ -110,6 +116,44 @@ export class FightBackEffect extends Effect {
   }
 
   decrementTurnsLeft(): Effect {
-    return new FightBackEffect(this.turnsLeft - 1);
+    return new FightBackEffect(this.sourceId, this.turnsLeft - 1);
+  }
+}
+
+export class PoisonEffect extends Effect {
+  constructor(sourceId: string, turnsLeft: number = 3) {
+    super("poison", sourceId, turnsLeft);
+  }
+
+  modifyOutgoingUpdate(
+    update: CharacterUpdate,
+    character: Character,
+    state: GameState,
+  ): CharacterUpdate {
+    return update;
+  }
+  modifyIncomingUpdate(
+    update: CharacterUpdate,
+    character: Character,
+    state: GameState,
+  ): CharacterUpdate {
+    return update;
+  }
+
+  onAfterUpdateApplied(
+    update: CharacterUpdate,
+    source: Character,
+    target: Character,
+    newState: GameState,
+  ): CharacterUpdate[] {
+    return [];
+  }
+
+  decrementTurnsLeft(): Effect {
+    return new PoisonEffect(this.sourceId, this.turnsLeft - 1);
+  }
+
+  onTurnEnd(character: Character, state: GameState): CharacterUpdate[] {
+    return [new DamageUpdate(this.sourceId, character.id, 1)];
   }
 }
