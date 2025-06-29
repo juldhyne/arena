@@ -1,11 +1,19 @@
+import { Character } from "../models/character";
 import { CharacterUpdate } from "../models/character-update";
 import { GameState } from "../models/game-state";
 
 export class GameLogicService {
   turnLogic(initialState: GameState, updates: CharacterUpdate[]): GameState {
-    let state = this.applyUpdates(initialState, updates);
+    const orderedUpdates = this.orderUpdatesByCharacterSpeed(
+      updates,
+      initialState,
+    );
 
-    for (let character of state.characters) {
+    let state = this.applyUpdates(initialState, orderedUpdates);
+
+    const orderedCharacters = this.orderCharactersBySpeed(state.characters);
+
+    for (let character of orderedCharacters) {
       for (let effect of character.effects) {
         if (effect.onTurnEnd) {
           const effectUpdates = effect.onTurnEnd(character, state);
@@ -83,5 +91,47 @@ export class GameLogicService {
     }
 
     return state;
+  }
+
+  private orderUpdatesByCharacterSpeed(
+    updates: CharacterUpdate[],
+    state: GameState,
+  ): CharacterUpdate[] {
+    // Create a map for quick character lookup
+    const characterMap = new Map(state.characters.map((c) => [c.id, c]));
+
+    // Group updates by sourceId
+    const updatesBySource = new Map<string, CharacterUpdate[]>();
+    for (const update of updates) {
+      if (!characterMap.has(update.sourceId)) continue;
+      const list = updatesBySource.get(update.sourceId) ?? [];
+      list.push(update);
+      updatesBySource.set(update.sourceId, list);
+    }
+
+    // Sort characters by speed descending (tie-breaker: id)
+    const sortedCharacters = this.orderCharactersBySpeed([
+      ...characterMap.values(),
+    ]);
+
+    // Flatten updates in sorted character order
+    const sortedUpdates: CharacterUpdate[] = [];
+    for (const character of sortedCharacters) {
+      const charUpdates = updatesBySource.get(character.id);
+      if (charUpdates) {
+        sortedUpdates.push(...charUpdates);
+      }
+    }
+
+    return sortedUpdates;
+  }
+
+  private orderCharactersBySpeed(characters: Character[]): Character[] {
+    const sortedCharacters = characters
+      .filter((c) => c.isAlive())
+      .sort((a, b) =>
+        b.speed === a.speed ? a.id.localeCompare(b.id) : b.speed - a.speed,
+      );
+    return sortedCharacters;
   }
 }
