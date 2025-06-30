@@ -1,3 +1,4 @@
+import { Board } from "./board";
 import { Position } from "./position";
 
 export enum Direction {
@@ -11,11 +12,36 @@ export enum Direction {
   SOUTH_EAST,
 }
 
+export function getDistanceLeftInDirection(
+  origin: Position,
+  direction: Direction,
+  board: Board,
+): number {
+  switch (direction) {
+    case Direction.NORTH:
+      return board.maxY - origin.y;
+    case Direction.WEST:
+      return origin.x - board.minX;
+    case Direction.EAST:
+      return board.maxX - origin.x;
+    case Direction.SOUTH:
+      return origin.y - board.minY;
+    case Direction.NORTH_WEST:
+      return Math.min(board.maxY - origin.y, origin.x - board.minX);
+    case Direction.NORTH_EAST:
+      return Math.min(board.maxY - origin.y, board.maxX - origin.x);
+    case Direction.SOUTH_WEST:
+      return Math.min(origin.y - board.minY, origin.x - board.minX);
+    case Direction.SOUTH_EAST:
+      return Math.min(origin.y - board.minY, board.maxX - origin.x);
+  }
+}
+
 export function moveInDirection(
   origin: Position,
   direction: Direction,
   distance: number,
-  board: { minX: number; maxX: number; minY: number; maxY: number },
+  board: Board,
 ): Position {
   let x = origin.x;
   let y = origin.y;
