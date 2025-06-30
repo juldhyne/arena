@@ -1,16 +1,29 @@
 import { Character } from "../models/character";
 import { CharacterUpdate } from "../models/character-update";
 import { GameState } from "../models/game-state";
+import { TurnAction } from "../models/turn-action";
+import { SkillRegistryService } from "./skill-registry.service";
 
 export class GameLogicService {
-  turnLogic(initialState: GameState, updates: CharacterUpdate[]): GameState {
-    const orderedUpdates = this.orderUpdatesByCharacterSpeed(
-      updates,
-      initialState,
-    );
+  constructor(private readonly skillRegistry: SkillRegistryService) {}
 
-    let state = this.applyUpdates(initialState, orderedUpdates);
+  turnLogic(initialState: GameState, actions: TurnAction[]): GameState {
+    let state = initialState;
+    // Order actions by character speed
+    const orderedActions = this.orderActionsByCharacterSpeed(actions, state);
 
+    for (const action of orderedActions) {
+      const executor = this.skillRegistry.getExecutor(action.skillId);
+      const source = state.characters.find((c) => c.id === action.sourceId);
+
+      if (!executor || !source) continue;
+
+      const skillUpdates = executor.execute(source, state, action.params);
+
+      state = this.applyUpdates(state, skillUpdates);
+    }
+
+    // Effects on turn end
     const orderedCharacters = this.orderCharactersBySpeed(state.characters);
 
     for (let character of orderedCharacters) {
@@ -22,9 +35,36 @@ export class GameLogicService {
       }
     }
 
-    state = state.incrementTurn();
+    return state.incrementTurn();
+  }
 
-    return state;
+  private orderActionsByCharacterSpeed(
+    actions: TurnAction[],
+    state: GameState,
+  ): TurnAction[] {
+    const characterMap = new Map(state.characters.map((c) => [c.id, c]));
+
+    return [...actions]
+      .filter((action) => {
+        const character = characterMap.get(action.sourceId);
+        return character && character.isAlive();
+      })
+      .sort((a, b) => {
+        const charA = characterMap.get(a.sourceId)!;
+        const charB = characterMap.get(b.sourceId)!;
+
+        return charB.speed === charA.speed
+          ? charA.id.localeCompare(charB.id)
+          : charB.speed - charA.speed;
+      });
+  }
+
+  private orderCharactersBySpeed(characters: Character[]): Character[] {
+    return characters
+      .filter((c) => c.isAlive())
+      .sort((a, b) =>
+        b.speed === a.speed ? a.id.localeCompare(b.id) : b.speed - a.speed,
+      );
   }
 
   private applyUpdates(
@@ -60,10 +100,8 @@ export class GameLogicService {
           update;
       }
 
-      // Apply the update
       state = state.applyUpdate(update);
 
-      // Reactive updates from effects
       const reactiveUpdates: CharacterUpdate[] = [];
 
       for (let effect of targetCharacter.effects) {
@@ -86,52 +124,9 @@ export class GameLogicService {
         if (reactions?.length) reactiveUpdates.push(...reactions);
       }
 
-      // Insert reactive updates at the front of the queue
       queue.unshift(...reactiveUpdates);
     }
 
     return state;
-  }
-
-  private orderUpdatesByCharacterSpeed(
-    updates: CharacterUpdate[],
-    state: GameState,
-  ): CharacterUpdate[] {
-    // Create a map for quick character lookup
-    const characterMap = new Map(state.characters.map((c) => [c.id, c]));
-
-    // Group updates by sourceId
-    const updatesBySource = new Map<string, CharacterUpdate[]>();
-    for (const update of updates) {
-      if (!characterMap.has(update.sourceId)) continue;
-      const list = updatesBySource.get(update.sourceId) ?? [];
-      list.push(update);
-      updatesBySource.set(update.sourceId, list);
-    }
-
-    // Sort characters by speed descending (tie-breaker: id)
-    const sortedCharacters = this.orderCharactersBySpeed([
-      ...characterMap.values(),
-    ]);
-
-    // Flatten updates in sorted character order
-    const sortedUpdates: CharacterUpdate[] = [];
-    for (const character of sortedCharacters) {
-      const charUpdates = updatesBySource.get(character.id);
-      if (charUpdates) {
-        sortedUpdates.push(...charUpdates);
-      }
-    }
-
-    return sortedUpdates;
-  }
-
-  private orderCharactersBySpeed(characters: Character[]): Character[] {
-    const sortedCharacters = characters
-      .filter((c) => c.isAlive())
-      .sort((a, b) =>
-        b.speed === a.speed ? a.id.localeCompare(b.id) : b.speed - a.speed,
-      );
-    return sortedCharacters;
   }
 }
