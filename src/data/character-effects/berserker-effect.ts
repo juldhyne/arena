@@ -1,6 +1,7 @@
 import { Character } from "../../models/character";
 import { CharacterUpdate } from "../../models/character-update";
 import { CharacterEffect } from "../../models/effect";
+import { GameState } from "../../models/game-state";
 import { DamageUpdate } from "../character-updates/damage-update";
 
 export class BerserkerEffect extends CharacterEffect {
@@ -36,7 +37,12 @@ export class BerserkerEffect extends CharacterEffect {
     return update;
   }
 
-  onAfterUpdateApplied(): CharacterUpdate[] {
+  onAfterUpdateApplied(
+    update: CharacterUpdate,
+    source: Character,
+    target: Character,
+    state: GameState,
+  ): CharacterUpdate[] {
     return [];
   }
 
