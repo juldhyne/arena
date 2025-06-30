@@ -3,6 +3,7 @@ import { CharacterUpdate } from "../../models/character-update";
 import { Direction } from "../../models/direction";
 import { GameState } from "../../models/game-state";
 import { SkillExecutor } from "../../models/skill-executor";
+import { DashUpdate } from "../character-updates/dash-update";
 
 export class FightSkillExecutor extends SkillExecutor {
   execute(
@@ -15,11 +16,12 @@ export class FightSkillExecutor extends SkillExecutor {
     if (param.direction === undefined || param.direction === null) {
       return [];
     }
-    const dash = CharacterUpdate.dash(
+    const dash = new DashUpdate(
       source.id,
       source.id,
       param.direction,
       DISTANCE,
+      true,
     );
 
     return [dash];
