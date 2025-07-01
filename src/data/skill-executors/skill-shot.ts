@@ -12,7 +12,7 @@ export class SkillShot {
     public readonly sourcePosition: Position,
     public readonly direction: Direction,
     public readonly minRange: number,
-    public readonly maxRange: number,
+    public readonly maxRange?: number,
   ) {}
 
   /**
@@ -21,17 +21,28 @@ export class SkillShot {
   findTarget(state: GameState): Character | null {
     let current = this.sourcePosition;
 
-    const calculatedMaxRange = Math.min(
-      getDistanceLeftInDirection(
-        this.sourcePosition,
-        this.direction,
-        state.board,
-      ),
-      this.maxRange,
-    );
+    const calculatedMaxRange = this.maxRange
+      ? Math.min(
+          getDistanceLeftInDirection(
+            this.sourcePosition,
+            this.direction,
+            state.board,
+          ),
+          this.maxRange,
+        )
+      : getDistanceLeftInDirection(
+          this.sourcePosition,
+          this.direction,
+          state.board,
+        );
 
     for (let i = 1; i <= calculatedMaxRange; i++) {
-      current = moveInDirection(current, this.direction, i, state.board);
+      current = moveInDirection(
+        this.sourcePosition,
+        this.direction,
+        i,
+        state.board,
+      );
 
       const character = state.characters.find(
         (c) =>
@@ -46,5 +57,32 @@ export class SkillShot {
     }
 
     return null;
+  }
+
+  /**
+   * Returns the last tile the skillshot reaches.
+   */
+  getEndPosition(state: GameState): Position {
+    const maxReachable = this.maxRange
+      ? Math.min(
+          getDistanceLeftInDirection(
+            this.sourcePosition,
+            this.direction,
+            state.board,
+          ),
+          this.maxRange,
+        )
+      : getDistanceLeftInDirection(
+          this.sourcePosition,
+          this.direction,
+          state.board,
+        );
+
+    return moveInDirection(
+      this.sourcePosition,
+      this.direction,
+      maxReachable,
+      state.board,
+    );
   }
 }

@@ -1,15 +1,148 @@
+import { AffectedTile } from "./affected-tile";
 import { Character } from "./character";
+import { TileEffect } from "./effect";
 
 import { GameState } from "./game-state";
 import { Position } from "./position";
 
-export abstract class CharacterUpdate {
+export class GameStateUpdateResult {
+  constructor(
+    public readonly updatedState: GameState,
+    public readonly reactiveUpdates: GameStateUpdate[],
+  ) {}
+}
+
+export abstract class GameStateUpdate {
+  abstract applyToGameState(state: GameState): GameStateUpdateResult;
+}
+
+export class AddTileEffectUpdate extends GameStateUpdate {
+  constructor(
+    public readonly position: Position,
+    public readonly tileEffect: TileEffect,
+  ) {
+    super();
+  }
+  applyToGameState(state: GameState): GameStateUpdateResult {
+    const updatedState = new GameState(
+      state.characters,
+      state.board,
+      state.turn,
+      state.affectedTiles.map((at) =>
+        at.position.x === this.position.x && at.position.y === this.position.y
+          ? new AffectedTile(at.position, [
+              ...at.effects.filter((e) => e.id != this.tileEffect.id),
+              this.tileEffect,
+            ])
+          : at,
+      ),
+    );
+    return new GameStateUpdateResult(updatedState, []);
+  }
+}
+
+export class RemoveTileEffectUpdate extends GameStateUpdate {
+  constructor(
+    public readonly position: Position,
+    public readonly tileEffectId: string,
+  ) {
+    super();
+  }
+  applyToGameState(state: GameState): GameStateUpdateResult {
+    const updatedState = new GameState(
+      state.characters,
+      state.board,
+      state.turn,
+      state.affectedTiles.map((at) =>
+        at.position.x === this.position.x && at.position.y === this.position.y
+          ? new AffectedTile(at.position, [
+              ...at.effects.filter((e) => e.id != this.tileEffectId),
+            ])
+          : at,
+      ),
+    );
+    return new GameStateUpdateResult(updatedState, []);
+  }
+}
+
+export abstract class CharacterUpdate extends GameStateUpdate {
   constructor(
     public readonly sourceId: string,
     public readonly targetId: string,
-  ) {}
+  ) {
+    super();
+  }
 
   abstract applyToCharacter(c: Character, s: GameState): Character;
+
+  applyToGameState(state: GameState): GameStateUpdateResult {
+    const sourceCharacter = state.characters.find(
+      (c) => c.id === this.sourceId,
+    );
+    const targetCharacter = state.characters.find(
+      (c) => c.id === this.targetId,
+    );
+
+    if (!sourceCharacter || !sourceCharacter.isAlive() || !targetCharacter) {
+      return new GameStateUpdateResult(state, []);
+    }
+
+    let modifiedUpdate: CharacterUpdate = this;
+    for (let effect of sourceCharacter.effects) {
+      modifiedUpdate =
+        effect.modifyOutgoingUpdate?.(this, sourceCharacter, state) ??
+        modifiedUpdate;
+    }
+
+    for (let effect of targetCharacter.effects) {
+      modifiedUpdate =
+        effect.modifyIncomingUpdate?.(modifiedUpdate, targetCharacter, state) ??
+        modifiedUpdate;
+    }
+
+    state = new GameState(
+      state.characters.map((c) =>
+        c.id === modifiedUpdate.targetId
+          ? modifiedUpdate.applyToCharacter(c, state)
+          : c,
+      ),
+      state.board,
+      state.turn,
+      state.affectedTiles,
+    );
+
+    const reactiveUpdates: CharacterUpdate[] = [];
+
+    for (let effect of targetCharacter.effects) {
+      const reactions = effect.onAfterUpdateApplied?.(
+        modifiedUpdate,
+        sourceCharacter,
+        targetCharacter,
+        state,
+      );
+      if (reactions?.length) reactiveUpdates.push(...reactions);
+    }
+
+    for (let effect of sourceCharacter.effects) {
+      const reactions = effect.onAfterUpdateApplied?.(
+        modifiedUpdate,
+        sourceCharacter,
+        targetCharacter,
+        state,
+      );
+      if (reactions?.length) reactiveUpdates.push(...reactions);
+    }
+
+    const updatedState = new GameState(
+      state.characters.map((c) =>
+        c.id === this.targetId ? this.applyToCharacter(c, state) : c,
+      ),
+      state.board,
+      state.turn,
+      state.affectedTiles,
+    );
+    return new GameStateUpdateResult(updatedState, reactiveUpdates);
+  }
 }
 
 export abstract class PositionUpdate extends CharacterUpdate {

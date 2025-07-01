@@ -1,5 +1,5 @@
 import { Character } from "../models/character";
-import { CharacterUpdate } from "../models/character-update";
+import { CharacterUpdate, GameStateUpdate } from "../models/character-update";
 import { GameState } from "../models/game-state";
 import { TurnAction } from "../models/turn-action";
 import { SkillRegistryService } from "./skill-registry.service";
@@ -69,62 +69,18 @@ export class GameLogicService {
 
   private applyUpdates(
     initialState: GameState,
-    updates: CharacterUpdate[],
+    updates: GameStateUpdate[],
   ): GameState {
     let state = initialState;
-    const queue: CharacterUpdate[] = [...updates];
+    const queue: GameStateUpdate[] = [...updates];
 
     while (queue.length > 0) {
       let update = queue.shift()!;
 
-      const sourceCharacter = state.characters.find(
-        (c) => c.id === update.sourceId,
-      );
-      const targetCharacter = state.characters.find(
-        (c) => c.id === update.targetId,
-      );
+      const result = update.applyToGameState(state);
+      state = result.updatedState;
 
-      if (!sourceCharacter || !sourceCharacter.isAlive() || !targetCharacter) {
-        continue;
-      }
-
-      for (let effect of sourceCharacter.effects) {
-        update =
-          effect.modifyOutgoingUpdate?.(update, sourceCharacter, state) ??
-          update;
-      }
-
-      for (let effect of targetCharacter.effects) {
-        update =
-          effect.modifyIncomingUpdate?.(update, targetCharacter, state) ??
-          update;
-      }
-
-      state = state.applyUpdate(update);
-
-      const reactiveUpdates: CharacterUpdate[] = [];
-
-      for (let effect of targetCharacter.effects) {
-        const reactions = effect.onAfterUpdateApplied?.(
-          update,
-          sourceCharacter,
-          targetCharacter,
-          state,
-        );
-        if (reactions?.length) reactiveUpdates.push(...reactions);
-      }
-
-      for (let effect of sourceCharacter.effects) {
-        const reactions = effect.onAfterUpdateApplied?.(
-          update,
-          sourceCharacter,
-          targetCharacter,
-          state,
-        );
-        if (reactions?.length) reactiveUpdates.push(...reactions);
-      }
-
-      queue.unshift(...reactiveUpdates);
+      queue.unshift(...result.reactiveUpdates);
     }
 
     return state;
