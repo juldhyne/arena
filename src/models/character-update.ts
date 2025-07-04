@@ -183,6 +183,10 @@ export abstract class PositionUpdate extends CharacterUpdate {
       : character.applyPosition(currentPosition);
   }
 
+  getPath(c: Character, s: GameState): Position[] {
+    return this.calculatePath(c, s);
+  }
+
   protected abstract calculatePath(c: Character, s: GameState): Position[];
   protected abstract resolveConflicts(
     start: Position,

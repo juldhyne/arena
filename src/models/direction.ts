@@ -12,6 +12,27 @@ export enum Direction {
   SOUTH_EAST,
 }
 
+export function getOppositeDirection(direction: Direction): Direction {
+  switch (direction) {
+    case Direction.NORTH:
+      return Direction.SOUTH;
+    case Direction.WEST:
+      return Direction.EAST;
+    case Direction.EAST:
+      return Direction.WEST;
+    case Direction.SOUTH:
+      return Direction.NORTH;
+    case Direction.NORTH_WEST:
+      return Direction.SOUTH_EAST;
+    case Direction.NORTH_EAST:
+      return Direction.SOUTH_WEST;
+    case Direction.SOUTH_WEST:
+      return Direction.NORTH_EAST;
+    case Direction.SOUTH_EAST:
+      return Direction.NORTH_WEST;
+  }
+}
+
 export function getDistanceLeftInDirection(
   origin: Position,
   direction: Direction,

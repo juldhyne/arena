@@ -1,3 +1,4 @@
+import { Direction } from "./direction";
 import { CharacterEffect, Effect } from "./effect";
 import { Position } from "./position";
 
@@ -8,6 +9,7 @@ export class Character {
     public readonly maxHp: number,
     public readonly speed: number,
     public readonly position: Position,
+    public readonly direction: Direction,
     public readonly effects: CharacterEffect[] = [],
   ) {}
 
@@ -33,6 +35,10 @@ export class Character {
     return this.copyWith({ position: position });
   }
 
+  applyDirection(direction: Direction): Character {
+    return this.copyWith({ direction: direction });
+  }
+
   applyAddEffect(effect: CharacterEffect): Character {
     const effects = [...this.effects.filter((e) => e.id !== effect.id), effect];
     return this.copyWith({ effects: effects });
@@ -54,6 +60,7 @@ export class Character {
     hp?: number;
     speed?: number;
     position?: Position;
+    direction?: Direction;
     effects?: CharacterEffect[];
   }): Character {
     return new Character(
@@ -62,6 +69,7 @@ export class Character {
       this.maxHp,
       params.speed ?? this.speed,
       params.position ?? this.position,
+      params.direction ?? this.direction,
       params.effects ?? this.effects,
     );
   }
