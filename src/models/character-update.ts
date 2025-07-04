@@ -3,6 +3,7 @@ import { Character } from "./character";
 import { TileEffect } from "./effect";
 
 import { GameState } from "./game-state";
+import { Link } from "./link";
 import { Position } from "./position";
 
 export class GameStateUpdateResult {
@@ -14,6 +15,51 @@ export class GameStateUpdateResult {
 
 export abstract class GameStateUpdate {
   abstract applyToGameState(state: GameState): GameStateUpdateResult;
+}
+
+export class AddLinkUpdate extends GameStateUpdate {
+  constructor(public readonly link: Link) {
+    super();
+  }
+  applyToGameState(state: GameState): GameStateUpdateResult {
+    const updatedState = new GameState(
+      state.characters,
+      state.board,
+      state.turn,
+      state.affectedTiles,
+      [
+        ...state.links.filter(
+          (l) =>
+            l.char1Id !== this.link.char1Id &&
+            l.char2Id !== this.link.char2Id &&
+            l.id !== this.link.id,
+        ),
+        this.link,
+      ],
+    );
+    return new GameStateUpdateResult(updatedState, []);
+  }
+}
+
+export class RemoveLinkUpdate extends GameStateUpdate {
+  constructor(public readonly link: Link) {
+    super();
+  }
+  applyToGameState(state: GameState): GameStateUpdateResult {
+    const updatedState = new GameState(
+      state.characters,
+      state.board,
+      state.turn,
+      state.affectedTiles,
+      state.links.filter(
+        (l) =>
+          l.char1Id !== this.link.char1Id &&
+          l.char2Id !== this.link.char2Id &&
+          l.id !== this.link.id,
+      ),
+    );
+    return new GameStateUpdateResult(updatedState, []);
+  }
 }
 
 export class AddTileEffectUpdate extends GameStateUpdate {
@@ -36,6 +82,7 @@ export class AddTileEffectUpdate extends GameStateUpdate {
             ])
           : at,
       ),
+      state.links,
     );
     return new GameStateUpdateResult(updatedState, []);
   }
@@ -60,6 +107,7 @@ export class RemoveTileEffectUpdate extends GameStateUpdate {
             ])
           : at,
       ),
+      state.links,
     );
     return new GameStateUpdateResult(updatedState, []);
   }
@@ -109,6 +157,7 @@ export abstract class CharacterUpdate extends GameStateUpdate {
       state.board,
       state.turn,
       state.affectedTiles,
+      state.links,
     );
 
     const reactiveUpdates: CharacterUpdate[] = [];
@@ -140,6 +189,7 @@ export abstract class CharacterUpdate extends GameStateUpdate {
       state.board,
       state.turn,
       state.affectedTiles,
+      state.links,
     );
     return new GameStateUpdateResult(updatedState, reactiveUpdates);
   }
