@@ -104,3 +104,13 @@ export function moveInDirection(
 
   return { x, y };
 }
+
+export function getDistanceBetweenPositions(a: Position, b: Position): number {
+  if (a.x === b.x) {
+    return Math.abs(a.y - b.y);
+  } else if (a.y === b.y) {
+    return Math.abs(a.x - b.x);
+  } else {
+    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+  }
+}

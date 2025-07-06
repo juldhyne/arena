@@ -5,6 +5,7 @@ import { Position } from "./position";
 export class Character {
   constructor(
     public readonly id: string,
+    public readonly teamId: string,
     public readonly hp: number,
     public readonly maxHp: number,
     public readonly speed: number,
@@ -65,6 +66,7 @@ export class Character {
   }): Character {
     return new Character(
       this.id,
+      this.teamId,
       params.hp ?? this.hp,
       this.maxHp,
       params.speed ?? this.speed,
