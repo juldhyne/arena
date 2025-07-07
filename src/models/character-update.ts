@@ -17,6 +17,22 @@ export abstract class GameStateUpdate {
   abstract applyToGameState(state: GameState): GameStateUpdateResult;
 }
 
+export class AddInvokeUpdate extends GameStateUpdate {
+  constructor(public readonly invoke: Character) {
+    super();
+  }
+  applyToGameState(state: GameState): GameStateUpdateResult {
+    const updatedState = new GameState(
+      [...state.characters, this.invoke],
+      state.board,
+      state.turn,
+      state.affectedTiles,
+      state.links,
+    );
+    return new GameStateUpdateResult(updatedState, []);
+  }
+}
+
 export class AddLinkUpdate extends GameStateUpdate {
   constructor(public readonly link: Link) {
     super();
