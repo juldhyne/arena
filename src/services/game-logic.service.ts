@@ -20,7 +20,9 @@ export class GameLogicService {
 
       const skillUpdates = executor.execute(source, state, action.params);
 
-      state = this.applyUpdates(state, skillUpdates);
+      const skillAndLinkUpdates = this.applyLinks(skillUpdates, state);
+
+      state = this.applyUpdates(state, skillAndLinkUpdates);
     }
 
     // Effects on turn end
@@ -72,6 +74,7 @@ export class GameLogicService {
     updates: GameStateUpdate[],
   ): GameState {
     let state = initialState;
+
     const queue: GameStateUpdate[] = [...updates];
 
     while (queue.length > 0) {
@@ -84,5 +87,30 @@ export class GameLogicService {
     }
 
     return state;
+  }
+
+  private applyLinks(
+    updates: GameStateUpdate[],
+    state: GameState,
+  ): GameStateUpdate[] {
+    const totalUpdates: GameStateUpdate[] = [];
+    for (let update of updates) {
+      totalUpdates.push(update);
+      if (update instanceof CharacterUpdate) {
+        const links = state.links.filter(
+          (link) =>
+            link.char1Id === update.sourceId ||
+            link.char1Id === update.targetId ||
+            link.char2Id === update.sourceId ||
+            link.char2Id === update.targetId,
+        );
+
+        for (let link of links) {
+          const updates = link.onUpdate(update, state);
+          totalUpdates.push(...updates);
+        }
+      }
+    }
+    return totalUpdates;
   }
 }
