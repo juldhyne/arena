@@ -6,6 +6,8 @@ import { JwtAuthGuard } from './config/jwt/jwt-auth.guard';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors();
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -17,8 +19,8 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new JwtAuthGuard(reflector));
 
-  await app.listen(process.env.PORT ?? 3000, () => {
-    console.log(`Server running on port 3000`);
+  await app.listen(process.env.PORT ?? 8000, () => {
+    console.log(`Server running on port 8000`);
   });
 }
 bootstrap();
