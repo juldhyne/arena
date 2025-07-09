@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dtos/signup.dto';
 import { SigninDto } from './dtos/signin.dto';
@@ -7,6 +7,12 @@ import { Public } from './decorators/public.decorator';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get('me')
+  getAuthenticatedUser(@Req() req) {
+    const uid = req.user?.uid;
+    return this.authService.getAuthenticatedUser(uid);
+  }
 
   @Public()
   @Post('signup')

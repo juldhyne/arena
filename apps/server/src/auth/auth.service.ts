@@ -17,9 +17,26 @@ export class AuthService {
     private readonly firebaseService: FirebaseService,
   ) {}
 
-  private generateDefaultUsername(): string {
-    const randomSuffix = randomBytes(4).toString('hex');
-    return `user_${randomSuffix}`;
+  async getAuthenticatedUser(uid: string) {
+    try {
+      const db = this.firebaseService.getDb();
+      const userDoc = await db.collection('users').doc(uid).get();
+
+      if (!userDoc.exists) {
+        throw new UnauthorizedException('Utilisateur introuvable');
+      }
+
+      const userData = userDoc.data();
+      return {
+        uid,
+        username: userData?.username,
+        email: userData?.email,
+        createdAt: userData?.createdAt,
+      };
+    } catch (error) {
+      console.error('Erreur dans /auth/me:', error);
+      throw new UnauthorizedException('Erreur de récupération du profil');
+    }
   }
 
   async signup(dto: SignupDto) {
@@ -114,5 +131,10 @@ export class AuthService {
       console.error('Erreur lors de la révocation des tokens:', error);
       throw new UnauthorizedException('Erreur lors de la déconnexion.');
     }
+  }
+
+  private generateDefaultUsername(): string {
+    const randomSuffix = randomBytes(4).toString('hex');
+    return `user_${randomSuffix}`;
   }
 }
