@@ -8,6 +8,7 @@ import firebaseConfig from './config/firebase/firebase.config';
 import { FirebaseModule } from './config/firebase/firebase.module';
 
 import { validationSchema } from './config/validation.schema';
+import { CharactersModule } from './characters/characters.module';
 import jwtConfig from './config/jwt/jwt.config';
 
 @Module({
@@ -19,6 +20,7 @@ import jwtConfig from './config/jwt/jwt.config';
     }),
     FirebaseModule,
     AuthModule,
+    CharactersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

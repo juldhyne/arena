@@ -1,8 +1,8 @@
-import { Character } from "../models/character";
-import { CharacterUpdate, GameStateUpdate } from "../models/character-update";
-import { GameState } from "../models/game-state";
-import { TurnAction } from "../models/turn-action";
-import { SkillRegistryService } from "./skill-registry.service";
+import { Character } from '../models/character';
+import { CharacterUpdate, GameStateUpdate } from '../models/character-update';
+import { GameState } from '../models/game-state';
+import { TurnAction } from '../models/turn-action';
+import { SkillRegistryService } from './skill-registry.service';
 
 export class GameLogicService {
   constructor(private readonly skillRegistry: SkillRegistryService) {}

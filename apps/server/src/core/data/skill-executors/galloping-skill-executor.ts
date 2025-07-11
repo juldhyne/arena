@@ -1,15 +1,16 @@
-import { Character } from "../../models/character";
+import { Character } from '../../models/character';
 import {
   AddLinkUpdate,
   CharacterUpdate,
   GameStateUpdate,
-} from "../../models/character-update";
-import { Direction } from "../../models/direction";
-import { GameState } from "../../models/game-state";
-import { HorseRiderLink } from "../../models/link";
-import { SkillExecutor } from "../../models/skill-executor";
-import { DashUpdate } from "../character-updates/dash-update";
-import { GallopingDashUpdate } from "../character-updates/galloping-dash-update";
+} from '../../models/character-update';
+import { Direction } from '../../models/direction';
+import { GameState } from '../../models/game-state';
+
+import { SkillExecutor } from '../../models/skill-executor';
+import { DashUpdate } from '../character-updates/dash-update';
+import { GallopingDashUpdate } from '../character-updates/galloping-dash-update';
+import { HorseRiderLink } from '../links/horse-rider-link';
 
 export class GallopingSkillExecutor extends SkillExecutor {
   execute(

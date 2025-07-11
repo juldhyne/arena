@@ -3,6 +3,8 @@ import AuthProvider from "./auth/AuthProvider";
 import Home from "./auth/Home";
 import SigninForm from "./auth/SigninForm";
 import SignupForm from "./auth/SignupForm";
+import CharactersList from "./characters/CharactersList";
+import CharactersProvider from "./characters/CharactersProvider";
 import Navbar from "./router/Navbar";
 import NotFound from "./router/NotFound";
 
@@ -13,15 +15,18 @@ function App() {
     <Router>
       <div className="App">
         <AuthProvider>
-          <Navbar />
-          <div className="content">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/signin" element={<SigninForm />} />
-              <Route path="/signup" element={<SignupForm />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
+          <CharactersProvider>
+            <Navbar />
+            <div className="content">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/signin" element={<SigninForm />} />
+                <Route path="/signup" element={<SignupForm />} />
+                <Route path="/characters" element={<CharactersList />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </CharactersProvider>
         </AuthProvider>
       </div>
     </Router>
