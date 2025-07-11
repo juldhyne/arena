@@ -7,7 +7,8 @@ import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { Team } from './entities/team.entity';
 import { FirebaseService } from '../config/firebase/firebase.service';
-import { CHARACTERS_SLOT } from '../characters/data/characters.data';
+import { CHARACTERS_SLOT } from '../core/data/characters/characters_slot';
+import { TeamResponseDto } from './dto/team-response.dto';
 
 @Injectable()
 export class TeamsService {
@@ -78,8 +79,41 @@ export class TeamsService {
     };
   }
 
-  findAll() {
-    return `This action returns all teams`;
+  async findAll(userId: string): Promise<TeamResponseDto[]> {
+    const db = this.firebaseService.getDb();
+
+    try {
+      const snapshot = await db
+        .collection('teams')
+        .where('userId', '==', userId)
+        .get();
+
+      const teams: TeamResponseDto[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
+
+        // Map characterIds to full Character objects
+        const characters = (data.characterIds as string[])
+          .map((id) => CHARACTERS_SLOT.find((c) => c.id === id))
+          .filter((c) => !!c); // Remove undefined values (in case of invalid IDs)
+
+        return {
+          id: doc.id,
+          userId: data.userId,
+          name: data.name,
+          characters,
+        };
+      });
+
+      return teams;
+    } catch (error) {
+      console.error(
+        `Erreur lors de la récupération des équipes pour l'utilisateur ${userId}:`,
+        error,
+      );
+      throw new BadRequestException(
+        'Une erreur est survenue lors de la récupération de vos équipes.',
+      );
+    }
   }
 
   findOne(id: number) {

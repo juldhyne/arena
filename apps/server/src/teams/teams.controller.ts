@@ -22,8 +22,8 @@ export class TeamsController {
   }
 
   @Get()
-  findAll() {
-    return this.teamsService.findAll();
+  findAll(@Req() req) {
+    return this.teamsService.findAll(req.user.uid);
   }
 
   @Get(':id')

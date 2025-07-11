@@ -10,6 +10,7 @@ import { FirebaseModule } from './config/firebase/firebase.module';
 import { validationSchema } from './config/validation.schema';
 import { CharactersModule } from './characters/characters.module';
 import jwtConfig from './config/jwt/jwt.config';
+import { TeamsModule } from './teams/teams.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import jwtConfig from './config/jwt/jwt.config';
     FirebaseModule,
     AuthModule,
     CharactersModule,
+    TeamsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
