@@ -17,7 +17,6 @@ export const CharactersProvider = ({
   // Load token and user on app start
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
-    console.log("CHARACTER PROVIDER USE EFFECT");
 
     if (storedToken) {
       fetchCharacters(storedToken);
@@ -35,7 +34,6 @@ export const CharactersProvider = ({
       if (!res.ok) throw new Error("Invalid token");
 
       const data = await res.json();
-      console.log(data);
 
       setCharacters(data);
     } catch (err) {
