@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Character } from "../characters/CharactersProvider";
 
 export class Team {
@@ -11,21 +10,19 @@ export class Team {
   ) {}
 }
 
-const TeamsContext = createContext<Team[]>([]);
+type TeamsContextType = {
+  teams: Team[];
+  fetchTeams: () => void;
+};
+
+const TeamsContext = createContext<TeamsContextType | undefined>(undefined);
 
 export const TeamsProvider = ({ children }: { children: React.ReactNode }) => {
   const [teams, setTeams] = useState<Team[]>([]);
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-
-    if (storedToken) {
-      fetchTeams(storedToken);
-    }
-  }, []);
-
-  const fetchTeams = async (token: string) => {
-    console.log(token);
+  const fetchTeams = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
     try {
       const res = await fetch("http://localhost:8000/teams", {
@@ -37,15 +34,20 @@ export const TeamsProvider = ({ children }: { children: React.ReactNode }) => {
       if (!res.ok) throw new Error("Invalid token");
 
       const data = await res.json();
-
       setTeams(data);
     } catch (err) {
       console.error("Error loading teams", err);
     }
   };
 
+  useEffect(() => {
+    fetchTeams();
+  }, []);
+
   return (
-    <TeamsContext.Provider value={teams}>{children}</TeamsContext.Provider>
+    <TeamsContext.Provider value={{ teams, fetchTeams }}>
+      {children}
+    </TeamsContext.Provider>
   );
 };
 
