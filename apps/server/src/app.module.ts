@@ -11,6 +11,7 @@ import { validationSchema } from './config/validation.schema';
 import { CharactersModule } from './characters/characters.module';
 import jwtConfig from './config/jwt/jwt.config';
 import { TeamsModule } from './teams/teams.module';
+import { GameModule } from './game/game.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { TeamsModule } from './teams/teams.module';
     AuthModule,
     CharactersModule,
     TeamsModule,
+    GameModule,
   ],
   controllers: [AppController],
   providers: [AppService],
